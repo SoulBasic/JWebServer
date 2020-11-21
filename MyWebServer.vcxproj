@@ -94,6 +94,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dbManager.hpp" />
+    <ClInclude Include="EpollManager.hpp" />
     <ClInclude Include="global.hpp" />
     <ClInclude Include="httpserver.hpp" />
     <ClInclude Include="log.hpp" />

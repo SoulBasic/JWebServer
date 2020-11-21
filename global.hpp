@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include "log.hpp"
 #include <memory>
+#include <cstring>
+#include <mutex>
 #define SOCKET int
 
 #define INVALID_SOCKET  (SOCKET)(~0)

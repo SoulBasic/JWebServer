@@ -13,9 +13,16 @@ private:
 	SOCKET _ssock;
 	sockaddr_in _ssin;
 	uint32_t _listenEvent;
+	char* root;
 	std::unique_ptr<EpollManager> _epollManager;
 public:
-	HttpServer(uint32_t listenEvent = EPOLLET) :_ssock(INVALID_SOCKET), _ssin({}),_listenEvent(listenEvent), _epollManager(new EpollManager()) {}
+	HttpServer(uint32_t listenEvent = EPOLLET) :_ssock(INVALID_SOCKET), _ssin({}),_listenEvent(listenEvent), _epollManager(new EpollManager()) 
+	{
+	
+		root = getcwd(nullptr, 256);
+		strncat(root, "/html/", 16);
+
+	}
 	~HttpServer()
 	{
 		if (INVALID_SOCKET != _ssock)
