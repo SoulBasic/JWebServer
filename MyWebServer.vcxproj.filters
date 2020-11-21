@@ -14,5 +14,17 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="httpserver.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="global.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="log.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Makefile" />
   </ItemGroup>
 </Project>

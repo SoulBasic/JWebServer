@@ -81,7 +81,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalRemoteCopySources>false</LocalRemoteCopySources>
-    <OutDir>$(ProjectDir)bin\Release</OutDir>
+    <OutDir>$(ProjectDir)bin</OutDir>
     <RemoteProjectDir>/home/jwl/work/$(ProjectName)</RemoteProjectDir>
     <RemoteBuildCommandLine>make server</RemoteBuildCommandLine>
     <RemoteReBuildCommandLine>make clean &amp;&amp; make server</RemoteReBuildCommandLine>
@@ -94,8 +94,12 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="global.hpp" />
+    <ClInclude Include="httpserver.hpp" />
+    <ClInclude Include="log.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Makefile" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>
