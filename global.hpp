@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <vector>
-#include <thread>
 #include <sys/epoll.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
@@ -17,6 +16,7 @@
 #include <memory>
 #include <cstring>
 #include <mutex>
+#include <signal.h>
 #define SOCKET int
 
 #define INVALID_SOCKET  (SOCKET)(~0)

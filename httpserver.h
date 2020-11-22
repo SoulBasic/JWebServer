@@ -5,6 +5,7 @@
 #include "global.hpp"
 #include "EpollManager.hpp"
 #include "Client.hpp"
+#include "ThreadManager.hpp"
 #define SERVER_ERROR -1
 #define SERVER_SUCCESS 0
 
@@ -18,6 +19,7 @@ private:
 	char* root;
 	bool _running;
 	std::unique_ptr<EpollManager> _epollManager;
+	std::unique_ptr<ThreadManager> _threadManager;
 	static const int maxClient = 65536;
 	std::unordered_map<SOCKET, std::shared_ptr<CLIENT>> clients;
 
@@ -25,12 +27,15 @@ private:
 	void closeClient(SOCKET fd);
 	void onRead(SOCKET fd);
 	void onWrite(SOCKET fd);
+	void handleRequest(std::shared_ptr<CLIENT> client);
+	void handleResponse(std::shared_ptr<CLIENT> client);
+	int setNonblock(int fd);
 public:
 	HttpServer(uint32_t listenEvent, int epollTimeoutMilli);
 	~HttpServer();
-	int initSocket(int port, std::string addr = "");
+	int initSocket(int port, std::string addr);
 	void onRun();
-	int setNonblock(int fd);
+
 };
 
 

@@ -12,11 +12,11 @@
     <ClCompile Include="main.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
+    <ClCompile Include="httpserver.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="httpserver.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="global.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -27,6 +27,18 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="dbManager.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="httpserver.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TimeStamp.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadManager.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -32,6 +32,7 @@ public:
 		printf(format, args...);
 		fflush(_logFile);
 	}
+
 	void error(const char* str) { error("%s", str); }
 	template<typename ...Args>
 	void error(const char* format, Args... args)
@@ -44,6 +45,7 @@ public:
 		printf(format, args...);
 		fflush(_logFile);
 	}
+
 	void warning(const char* str) { warning("%s", str); }
 	template<typename ...Args>
 	void warning(const char* format, Args... args)
@@ -56,6 +58,7 @@ public:
 		printf(format, args...);
 		fflush(_logFile);
 	}
+
 	void debug(const char* str) { debug("%s", str); }
 	template<typename ...Args>
 	void debug(const char* format, Args... args)

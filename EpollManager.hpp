@@ -35,7 +35,8 @@ public:
 		}
 	}
 
-	bool modFd(int fd, uint32_t events) {
+	bool modFd(int fd, uint32_t events) 
+	{
 		if (fd < 0) return false;
 		epoll_event ev = { 0 };
 		ev.data.fd = fd;

@@ -1,11 +1,11 @@
 #include "httpserver.h"
 
-HttpServer::HttpServer(uint32_t listenEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager())
+HttpServer::HttpServer(uint32_t listenEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager())
 {
 	_running = true;
 	root = getcwd(nullptr, 256);
 	strncat(root, "/html/", 16);
-
+	//int count = DBManager::Instance().connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 10);
 }
 
 HttpServer::~HttpServer()
@@ -18,7 +18,7 @@ HttpServer::~HttpServer()
 	}
 }
 
-int HttpServer::initSocket(int port, std::string addr = "")
+int HttpServer::initSocket(int port, std::string addr)
 {
 	_ssock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (INVALID_SOCKET == _ssock)
@@ -87,10 +87,7 @@ int HttpServer::initSocket(int port, std::string addr = "")
 	return SERVER_SUCCESS;
 }
 
-int HttpServer::setNonblock(int fd) {
-	if (fd < 0)return SERVER_ERROR;
-	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
-}
+
 
 void HttpServer::onRun()
 {
@@ -110,6 +107,13 @@ void HttpServer::onRun()
 		}
 	}
 }
+
+int HttpServer::setNonblock(int fd)
+{
+	if (fd < 0)return SERVER_ERROR;
+	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
+}
+
 void HttpServer::acceptClient()
 {
 	SOCKET csock = INVALID_SOCKET;
@@ -149,10 +153,39 @@ void HttpServer::closeClient(SOCKET fd)
 
 void HttpServer::onRead(SOCKET fd)
 {
-
+	auto it = clients.find(fd);
+	if (it == clients.end())
+	{
+		LOG_ERROR("来自无效客户端的请求");
+		return;
+	}
+	_threadManager->addTask(std::bind(&HttpServer::handleRequest, this, it->second));
 }
 
 void HttpServer::onWrite(SOCKET fd)
 {
+	auto it = clients.find(fd);
+	if (it == clients.end())
+	{
+		LOG_ERROR("找不到可写对象客户端");
+		return;
+	}
+	_threadManager->addTask(std::bind(&HttpServer::handleResponse, this, it->second));
+}
+
+
+void HttpServer::handleRequest(std::shared_ptr<CLIENT> client)
+{
+	if (client == nullptr)return;
+	LOG_INFO("客户请求页面");
 
 }
+void HttpServer::handleResponse(std::shared_ptr<CLIENT> client)
+{
+	if (client == nullptr)return;
+	LOG_INFO("客户");
+	int res = SERVER_ERROR;
+	int readErrno = 0;
+}
+
+

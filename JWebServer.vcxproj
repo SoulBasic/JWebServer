@@ -95,13 +95,17 @@
     <LocalRemoteCopySources>false</LocalRemoteCopySources>
   </PropertyGroup>
   <ItemGroup>
+    <ClCompile Include="httpserver.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ThreadManager.hpp" />
+    <ClInclude Include="TimeStamp.hpp" />
+    <ClInclude Include="Client.hpp" />
     <ClInclude Include="dbManager.hpp" />
     <ClInclude Include="EpollManager.hpp" />
     <ClInclude Include="global.hpp" />
-    <ClInclude Include="httpserver.hpp" />
+    <ClInclude Include="httpserver.h" />
     <ClInclude Include="log.hpp" />
   </ItemGroup>
   <ItemGroup>
