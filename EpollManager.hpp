@@ -15,6 +15,12 @@ public:
 		close(_epfd);
 	}
 
+	int wait(int timeout)
+	{
+		return epoll_wait(_epfd, &_events[0], static_cast<int>(_events.size()), timeout);
+	}
+
+
 	bool addFd(int fd, uint32_t events)
 	{
 		if (fd < 0)return false;

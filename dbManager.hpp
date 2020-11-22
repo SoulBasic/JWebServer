@@ -13,13 +13,12 @@ public:
 		static DBManager _dbManager;
 		return _dbManager;
 	}
-
-	void connect(const char* host, int port, const char* userName, const char* passWord, const char* dbName, int connCount = 10)
+	int connect(const char* host, int port, const char* userName, const char* passWord, const char* dbName, int connCount = 10)
 	{
 		if (connCount <= 0)
 		{
 			LOG_ERROR("分配的数据库连接数小于等于0");
-			return;
+			return -1;
 		}
 		for (int i = 0; i < connCount; i++)
 		{
@@ -32,6 +31,7 @@ public:
 		}
 		_maxConn = connCount;
 		sem_init(&_semID, 0, _maxConn);
+		return _connQueue.size();
 	}
 
 	MYSQL* getConn()
@@ -50,17 +50,36 @@ public:
 		return sql;
 	}
 
-private:
-	DBManager() 
+	void freeConn(MYSQL* sql)
 	{
-		_validCount = 0;
-
+		if (sql == nullptr)return;
+		std::lock_guard<std::mutex> locker(_mtx);
+		_connQueue.push(sql);
+		sem_post(&_semID);
 	}
-	~DBManager() {}
 
+	void terminal()
+	{
+		std::lock_guard<std::mutex> locker(_mtx);
+		while (!_connQueue.empty())
+		{
+			auto sql = _connQueue.front();
+			_connQueue.pop();
+			mysql_close(sql);
+		}
+		mysql_library_end();
+	}
+
+	int getValidCount()
+	{
+		std::lock_guard<std::mutex> locker(_mtx);
+		return _connQueue.size();
+	}
+
+private:
+	DBManager() {}
+	~DBManager() { terminal(); }
 	int _maxConn;
-	int _validCount;
-
 	std::queue<MYSQL*> _connQueue;
 	std::mutex _mtx;
 	sem_t _semID;
