@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef _DB_MANAGER_HPP_
 #define _DB_MANAGER_HPP_
 #include "global.hpp"
@@ -17,16 +17,16 @@ public:
 	{
 		if (connCount <= 0)
 		{
-			LOG_ERROR("·ÖÅäµÄÊý¾Ý¿âÁ¬½ÓÊýÐ¡ÓÚµÈÓÚ0");
+			LOG_ERROR("åˆ†é…çš„æ•°æ®åº“è¿žæŽ¥æ•°å°äºŽç­‰äºŽ0");
 			return -1;
 		}
 		for (int i = 0; i < connCount; i++)
 		{
 			MYSQL* sql = nullptr;
 			sql = mysql_init(sql);
-			if (!sql) LOG_ERROR("³õÊ¼»¯MySQLÁ¬½Ó %d Ê§°Ü", i);
+			if (!sql) LOG_ERROR("åˆå§‹åŒ–MySQLè¿žæŽ¥ %d å¤±è´¥", i);
 			sql = mysql_real_connect(sql, host, userName, passWord, dbName, port, nullptr, 0);
-			if(!sql) LOG_ERROR("µÚ%dºÅÁ¬½ÓMySQLÊ§°Ü", i);
+			if(!sql) LOG_ERROR("ç¬¬%då·è¿žæŽ¥MySQLå¤±è´¥", i);
 			_connQueue.push(sql);
 		}
 		_maxConn = connCount;
@@ -39,7 +39,7 @@ public:
 		MYSQL* sql = nullptr;
 		if (_connQueue.empty())
 		{
-			LOG_WARNING("sqlÁ¬½Ó·±Ã¦");
+			LOG_WARNING("sqlè¿žæŽ¥ç¹å¿™");
 			return nullptr;
 		}
 		sem_wait(&_semID);

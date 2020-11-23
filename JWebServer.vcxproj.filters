@@ -9,38 +9,38 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
-    <ClCompile Include="httpserver.cpp">
-      <Filter>Sources</Filter>
-    </ClCompile>
+    <ClInclude Include="src\httpserver.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Client.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dbManager.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EpollManager.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\global.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\log.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThreadManager.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\TimeStamp.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="global.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="log.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="EpollManager.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dbManager.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="httpserver.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Client.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="TimeStamp.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadManager.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
+    <ClCompile Include="src\httpserver.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />

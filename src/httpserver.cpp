@@ -1,6 +1,6 @@
-#include "httpserver.h"
+ï»¿#include "httpserver.h"
 
-HttpServer::HttpServer(uint32_t listenEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager())
+HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent),_connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager())
 {
 	_running = true;
 	root = getcwd(nullptr, 256);
@@ -23,12 +23,12 @@ int HttpServer::initSocket(int port, std::string addr)
 	_ssock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (INVALID_SOCKET == _ssock)
 	{
-		LOG_ERROR("Éú³É·şÎñÆ÷Ì×½Ó×ÖÊ§°Ü");
+		LOG_ERROR("ç”ŸæˆæœåŠ¡å™¨å¥—æ¥å­—å¤±è´¥");
 		_running = false;
 		return SERVER_ERROR;
 	}
 	if (port > 65535 || port < 1024) {
-		LOG_ERROR("¶Ë¿Ú²»ºÏ·¨");
+		LOG_ERROR("ç«¯å£ä¸åˆæ³•");
 		_running = false;
 		return SERVER_ERROR;
 	}
@@ -39,7 +39,7 @@ int HttpServer::initSocket(int port, std::string addr)
 
 	//struct linger optLinger = { 0 };
 	//if (openLinger_) {
-	//	/* ÓÅÑÅ¹Ø±Õ: Ö±µ½ËùÊ£Êı¾İ·¢ËÍÍê±Ï»ò³¬Ê± */
+	//	/* ä¼˜é›…å…³é—­: ç›´åˆ°æ‰€å‰©æ•°æ®å‘é€å®Œæ¯•æˆ–è¶…æ—¶ */
 	//	optLinger.l_onoff = 1;
 	//	optLinger.l_linger = 1;
 	//}
@@ -57,7 +57,7 @@ int HttpServer::initSocket(int port, std::string addr)
 
 		close(_ssock);
 		_ssock = INVALID_SOCKET;
-		LOG_ERROR("°ó¶¨¶Ë¿ÚÊ§°Ü");
+		LOG_ERROR("ç»‘å®šç«¯å£å¤±è´¥");
 		_running = false;
 		return SERVER_ERROR;
 	}
@@ -67,22 +67,22 @@ int HttpServer::initSocket(int port, std::string addr)
 	{
 		close(_ssock);
 		_ssock = INVALID_SOCKET;
-		LOG_ERROR("¼àÌı¶Ë¿ÚÊ§°Ü");
+		LOG_ERROR("ç›‘å¬ç«¯å£å¤±è´¥");
 		_running = false;
 		return SERVER_ERROR;
 	}
 
-	res = _epollManager->addFd(_ssock, _listenEvent | EPOLLIN);
+	res = _epollManager->addFd(_ssock, _listenEvent | EPOLLIN | EPOLLRDHUP);
 	if (!res)
 	{
 		close(_ssock);
 		_ssock = INVALID_SOCKET;
-		LOG_ERROR("Ìí¼ÓEpoll¼àÌıÊÂ¼şÊ§°Ü");
+		LOG_ERROR("æ·»åŠ Epollç›‘å¬äº‹ä»¶å¤±è´¥");
 		_running = false;
 		return SERVER_ERROR;
 	}
 	setNonblock(_ssock);
-	LOG_INFO("³õÊ¼»¯·şÎñÆ÷Íê³É");
+	LOG_INFO("åˆå§‹åŒ–æœåŠ¡å™¨å®Œæˆ");
 
 	return SERVER_SUCCESS;
 }
@@ -91,7 +91,7 @@ int HttpServer::initSocket(int port, std::string addr)
 
 void HttpServer::onRun()
 {
-	LOG_INFO("·şÎñÆ÷¿ªÊ¼¹¤×÷");
+	LOG_INFO("æœåŠ¡å™¨å¼€å§‹å·¥ä½œ");
 	while (_running)
 	{
 		int eventCount = _epollManager->wait(_epollTimeout);
@@ -103,7 +103,7 @@ void HttpServer::onRun()
 			else if (event & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) closeClient(fd);
 			else if (event & EPOLLIN) onRead(fd);
 			else if (event & EPOLLOUT) onWrite(fd);
-			else LOG_ERROR("·şÎñÆ÷Î´Öª´íÎó£¬epoll eventÎ´¶¨Òå");
+			else LOG_ERROR("æœåŠ¡å™¨æœªçŸ¥é”™è¯¯ï¼Œepoll eventæœªå®šä¹‰");
 		}
 	}
 }
@@ -124,18 +124,20 @@ void HttpServer::acceptClient()
 		csock = accept(_ssock, reinterpret_cast<sockaddr*>(&csin), &len);
 		if (INVALID_SOCKET == csock)
 		{
-			LOG_ERROR("½ÓÊÕµ½ÎŞĞ§socket");
+			LOG_ERROR("æ¥æ”¶åˆ°æ— æ•ˆsocket");
 			return;
 		}
 		else if (clients.size() >= maxClient)
 		{
-			LOG_WARNING("¿Í»§ÊıÒÑ´ïÉÏÏŞ£¬·şÎñÆ÷·±Ã¦");
+			LOG_WARNING("å®¢æˆ·æ•°å·²è¾¾ä¸Šé™ï¼ŒæœåŠ¡å™¨ç¹å¿™");
 			return;
 		}
 		else
 		{
-			LOG_INFO("ĞÂ¿Í»§¶ËÁ¬½Ó:%d IP:%s", csock, inet_ntoa(csin.sin_addr));
-			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(csock, csin, csock, "user" + std::to_string(csock)));
+			LOG_INFO("æ–°å®¢æˆ·ç«¯è¿æ¥:%d IP:%s", csock, inet_ntoa(csin.sin_addr));
+			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, "user" + std::to_string(csock)));
+			_epollManager->addFd(csock, EPOLLIN | _connEvent);
+			setNonblock(csock);
 		}
 	}
 }
@@ -145,7 +147,7 @@ void HttpServer::closeClient(SOCKET fd)
 	auto it = clients.find(fd);
 	if (fd >= 0 && it != clients.end())
 	{
-		LOG_INFO("¿Í»§%dÍË³ö",fd);
+		LOG_INFO("å®¢æˆ·%dé€€å‡º",fd);
 		_epollManager->deleteFd(fd);
 		clients.erase(fd);
 	}
@@ -156,7 +158,7 @@ void HttpServer::onRead(SOCKET fd)
 	auto it = clients.find(fd);
 	if (it == clients.end())
 	{
-		LOG_ERROR("À´×ÔÎŞĞ§¿Í»§¶ËµÄÇëÇó");
+		LOG_ERROR("æ¥è‡ªæ— æ•ˆå®¢æˆ·ç«¯çš„è¯·æ±‚");
 		return;
 	}
 	_threadManager->addTask(std::bind(&HttpServer::handleRequest, this, it->second));
@@ -167,9 +169,10 @@ void HttpServer::onWrite(SOCKET fd)
 	auto it = clients.find(fd);
 	if (it == clients.end())
 	{
-		LOG_ERROR("ÕÒ²»µ½¿ÉĞ´¶ÔÏó¿Í»§¶Ë");
+		LOG_ERROR("æ‰¾ä¸åˆ°å¯å†™å¯¹è±¡å®¢æˆ·ç«¯");
 		return;
 	}
+	LOG_DEBUG("æœ‰å¯å†™äº‹ä»¶ï¼Œæ·»åŠ ä»»åŠ¡åˆ°çº¿ç¨‹æ± ä¸­");
 	_threadManager->addTask(std::bind(&HttpServer::handleResponse, this, it->second));
 }
 
@@ -177,13 +180,24 @@ void HttpServer::onWrite(SOCKET fd)
 void HttpServer::handleRequest(std::shared_ptr<CLIENT> client)
 {
 	if (client == nullptr)return;
-	LOG_INFO("¿Í»§ÇëÇóÒ³Ãæ");
+	auto res = client->read_once();
+	bool status = std::get<0>(res);
+	int statCode = std::get<1>(res);
+	if (status == false && statCode != EAGAIN)//å®¢æˆ·é€€å‡º
+	{
+		closeClient(client->getSock());
+		return;
+	}
+	else if (status == true) // å¤„ç†è¯·æ±‚
+	{
+		LOG_INFO("å®¢æˆ·è¯·æ±‚é¡µé¢");
+		client->process();
+	}
 
 }
 void HttpServer::handleResponse(std::shared_ptr<CLIENT> client)
 {
 	if (client == nullptr)return;
-	LOG_INFO("¿Í»§");
 	int res = SERVER_ERROR;
 	int readErrno = 0;
 }

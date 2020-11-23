@@ -95,23 +95,21 @@
     <LocalRemoteCopySources>false</LocalRemoteCopySources>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="httpserver.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="src\Client.hpp" />
+    <ClInclude Include="src\dbManager.hpp" />
+    <ClInclude Include="src\EpollManager.hpp" />
+    <ClInclude Include="src\global.hpp" />
+    <ClInclude Include="src\httpserver.h" />
+    <ClInclude Include="src\log.hpp" />
+    <ClInclude Include="src\ThreadManager.hpp" />
+    <ClInclude Include="src\TimeStamp.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ThreadManager.hpp" />
-    <ClInclude Include="TimeStamp.hpp" />
-    <ClInclude Include="Client.hpp" />
-    <ClInclude Include="dbManager.hpp" />
-    <ClInclude Include="EpollManager.hpp" />
-    <ClInclude Include="global.hpp" />
-    <ClInclude Include="httpserver.h" />
-    <ClInclude Include="log.hpp" />
+    <ClCompile Include="src\httpserver.cpp" />
+    <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />
-  </ItemGroup>
-  <ItemGroup>
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

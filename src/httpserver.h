@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _HTTPSERVER_H_
 #define _HTTPSERVER_H_
 
@@ -15,6 +15,7 @@ private:
 	SOCKET _ssock;
 	sockaddr_in _ssin;
 	uint32_t _listenEvent;
+	uint32_t _connEvent;
 	int _epollTimeout;
 	char* root;
 	bool _running;
@@ -31,7 +32,7 @@ private:
 	void handleResponse(std::shared_ptr<CLIENT> client);
 	int setNonblock(int fd);
 public:
-	HttpServer(uint32_t listenEvent, int epollTimeoutMilli);
+	HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli);
 	~HttpServer();
 	int initSocket(int port, std::string addr);
 	void onRun();

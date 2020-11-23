@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef _EPOLL_MANAGER_HPP_
 #define _EPOLL_MANAGER_HPP_
 #include "global.hpp"
@@ -7,8 +7,8 @@ class EpollManager
 public:
 	explicit EpollManager(int maxEvents = 1024):_epfd(epoll_create(256)),_events(maxEvents)
 	{
-		if (_events.size() == 0)LOG_ERROR("max eventÊýÁ¿Îª0");
-		if (_epfd < 0)LOG_ERROR("epfd²»ºÏ·¨");
+		if (_events.size() == 0)LOG_ERROR("max eventæ•°é‡ä¸º0");
+		if (_epfd < 0)LOG_ERROR("epfdä¸åˆæ³•");
 	}
 	~EpollManager()
 	{
@@ -30,7 +30,7 @@ public:
 		if (epoll_ctl(_epfd, EPOLL_CTL_ADD, fd, &ev) == 0)return true;
 		else
 		{
-			LOG_ERROR("epoll_ctl_add´íÎó");
+			LOG_ERROR("epoll_ctl_addé”™è¯¯");
 			return false;
 		}
 	}
@@ -44,7 +44,7 @@ public:
 		if (epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &ev) == 0)return true;
 		else
 		{
-			LOG_ERROR("epoll_ctl_mod´íÎó");
+			LOG_ERROR("epoll_ctl_modé”™è¯¯");
 			return false;
 		}
 	}
@@ -56,7 +56,7 @@ public:
 		if (epoll_ctl(_epfd, EPOLL_CTL_DEL, fd, &ev) == 0)return true;
 		else
 		{
-			LOG_ERROR("epoll_ctl_del´íÎó");
+			LOG_ERROR("epoll_ctl_delé”™è¯¯");
 			return false;
 		}
 	}

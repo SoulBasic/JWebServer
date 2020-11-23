@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #ifndef _THREAD_MANAGER_HPP_
 #define _THREAD_MANAGER_HPP_
 
@@ -16,7 +16,7 @@ private:
 public:
 	ThreadManager(size_t threadCount = 4)
 	{
-		if (threadCount <= 0)LOG_ERROR("Ïß³Ì³ØÖÐ¿ÉÓÃÏß³ÌÊýÁ¿Ð¡ÓÚµÈÓÚ0");
+		if (threadCount <= 0)LOG_ERROR("çº¿ç¨‹æ± ä¸­å¯ç”¨çº¿ç¨‹æ•°é‡å°äºŽç­‰äºŽ0");
 		running = true;
 		for (size_t i = 0; i < threadCount; i++)
 		{

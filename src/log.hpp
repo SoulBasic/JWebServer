@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #ifndef _LOG_HPP_
 #define _LOG_HPP_
 #include <cstdio>
@@ -29,6 +29,7 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Info]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
+		printf("%s", "\n");
 		printf(format, args...);
 		fflush(_logFile);
 	}
@@ -42,6 +43,7 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Error]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
+		printf("%s", "\n");
 		printf(format, args...);
 		fflush(_logFile);
 	}
@@ -55,6 +57,7 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Warning]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
+		printf("%s", "\n");
 		printf(format, args...);
 		fflush(_logFile);
 	}
@@ -68,6 +71,7 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Debug]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
+		printf("%s", "\n");
 		printf(format, args...);
 		fflush(_logFile);
 	}
