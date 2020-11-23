@@ -3,8 +3,8 @@
 HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent),_connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager())
 {
 	_running = true;
-	root = getcwd(nullptr, 256);
-	strncat(root, "/html/", 16);
+	_root = getcwd(nullptr, 256);
+	strncat(_root, "/html", 16);
 	//int count = DBManager::Instance().connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 10);
 }
 
@@ -135,7 +135,7 @@ void HttpServer::acceptClient()
 		else
 		{
 			LOG_INFO("新客户端连接:%d IP:%s", csock, inet_ntoa(csin.sin_addr));
-			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, "user" + std::to_string(csock)));
+			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
 			_epollManager->addFd(csock, EPOLLIN | _connEvent);
 			setNonblock(csock);
 		}
@@ -180,7 +180,7 @@ void HttpServer::onWrite(SOCKET fd)
 void HttpServer::handleRequest(std::shared_ptr<CLIENT> client)
 {
 	if (client == nullptr)return;
-	auto res = client->read_once();
+	auto res = client->read();
 	bool status = std::get<0>(res);
 	int statCode = std::get<1>(res);
 	if (status == false && statCode != EAGAIN)//客户退出
@@ -191,7 +191,11 @@ void HttpServer::handleRequest(std::shared_ptr<CLIENT> client)
 	else if (status == true) // 处理请求
 	{
 		LOG_INFO("客户请求页面");
-		client->process();
+		REQUEST_TYPE requestType = client->process_request();
+		if (NO_REQUEST == requestType) _epollManager->modFd(client->getSock(), _connEvent | EPOLLIN);
+		bool res = client->process_response(requestType);
+		if (!res) closeClient(client->getSock());
+		else _epollManager->modFd(client->getSock(), _connEvent | EPOLLOUT);
 	}
 
 }
@@ -199,7 +203,22 @@ void HttpServer::handleResponse(std::shared_ptr<CLIENT> client)
 {
 	if (client == nullptr)return;
 	int res = SERVER_ERROR;
-	int readErrno = 0;
+	int writeErrno = 0;
+	res = client->write();
+	if (client->writeBufAllSent()) 
+	{
+		if (client->getLinger()) 
+		{
+			_epollManager->modFd(client->getSock(), _connEvent | EPOLLIN);
+			return;
+		}
+	}
+	else if (res) 
+	{
+		_epollManager->modFd(client->getSock(), _connEvent | EPOLLOUT);
+		return;
+	}
+	closeClient(client->getSock());
 }
 
 

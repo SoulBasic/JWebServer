@@ -95,7 +95,7 @@
     <LocalRemoteCopySources>false</LocalRemoteCopySources>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="src\Client.hpp" />
+    <ClInclude Include="src\client.h" />
     <ClInclude Include="src\dbManager.hpp" />
     <ClInclude Include="src\EpollManager.hpp" />
     <ClInclude Include="src\global.hpp" />
@@ -105,6 +105,7 @@
     <ClInclude Include="src\TimeStamp.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\client.cpp" />
     <ClCompile Include="src\httpserver.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
