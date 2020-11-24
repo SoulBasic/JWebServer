@@ -40,7 +40,7 @@ public:
 		if (fd < 0) return false;
 		epoll_event ev = { 0 };
 		ev.data.fd = fd;
-		ev.events = events;
+		ev.events = events ;
 		if (epoll_ctl(_epfd, EPOLL_CTL_MOD, fd, &ev) == 0)return true;
 		else
 		{

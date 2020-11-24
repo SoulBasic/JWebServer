@@ -1,10 +1,8 @@
 server: 
-	mkdir -p ./bin
-	g++ ./src/client.cpp ./src/httpserver.cpp ./src/main.cpp -std=c++14 -lpthread -lmysqlclient -o ./bin/server
+	g++ ./src/client.cpp ./src/httpserver.cpp ./src/main.cpp -std=c++14 -lpthread -lmysqlclient -o ./server
 debug: 
-	mkdir -p ./debug
-	g++ ./src/client.cpp ./src/httpserver.cpp ./src/main.cpp -std=c++14 -g -lpthread -lmysqlclient -o ./debug/server
+	g++ ./src/client.cpp ./src/httpserver.cpp ./src/main.cpp -std=c++14 -g -lpthread -lmysqlclient -o ./server-debug
 
 clean:
-	rm -rf ./bin/server
-	rm -rf ./debug/server
+	rm -rf ./server
+	rm -rf ./server-debug

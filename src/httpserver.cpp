@@ -124,7 +124,7 @@ void HttpServer::acceptClient()
 		csock = accept(_ssock, reinterpret_cast<sockaddr*>(&csin), &len);
 		if (INVALID_SOCKET == csock)
 		{
-			LOG_ERROR("接收到无效socket");
+			//LOG_ERROR("接收到无效socket");
 			return;
 		}
 		else if (clients.size() >= maxClient)
@@ -134,9 +134,9 @@ void HttpServer::acceptClient()
 		}
 		else
 		{
-			LOG_INFO("新客户端连接:%d IP:%s", csock, inet_ntoa(csin.sin_addr));
+			LOG_INFO("新客户端连接:%s", inet_ntoa(csin.sin_addr));
 			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
-			_epollManager->addFd(csock, EPOLLIN | _connEvent);
+			_epollManager->addFd(csock, EPOLLIN | _connEvent );
 			setNonblock(csock);
 		}
 	}
@@ -172,7 +172,6 @@ void HttpServer::onWrite(SOCKET fd)
 		LOG_ERROR("找不到可写对象客户端");
 		return;
 	}
-	LOG_DEBUG("有可写事件，添加任务到线程池中");
 	_threadManager->addTask(std::bind(&HttpServer::handleResponse, this, it->second));
 }
 
@@ -190,35 +189,25 @@ void HttpServer::handleRequest(std::shared_ptr<CLIENT> client)
 	}
 	else if (status == true) // 处理请求
 	{
-		LOG_INFO("客户请求页面");
 		REQUEST_TYPE requestType = client->process_request();
-		if (NO_REQUEST == requestType) _epollManager->modFd(client->getSock(), _connEvent | EPOLLIN);
+		if (NO_REQUEST == requestType)
+		{
+			_epollManager->modFd(client->getSock(), _connEvent | EPOLLIN);
+			return;
+		}
 		bool res = client->process_response(requestType);
 		if (!res) closeClient(client->getSock());
 		else _epollManager->modFd(client->getSock(), _connEvent | EPOLLOUT);
 	}
 
 }
+
 void HttpServer::handleResponse(std::shared_ptr<CLIENT> client)
 {
 	if (client == nullptr)return;
-	int res = SERVER_ERROR;
-	int writeErrno = 0;
-	res = client->write();
-	if (client->writeBufAllSent()) 
-	{
-		if (client->getLinger()) 
-		{
-			_epollManager->modFd(client->getSock(), _connEvent | EPOLLIN);
-			return;
-		}
-	}
-	else if (res) 
-	{
-		_epollManager->modFd(client->getSock(), _connEvent | EPOLLOUT);
-		return;
-	}
-	closeClient(client->getSock());
+	auto res = client->write();
+	if (!std::get<0>(res)) closeClient(client->getSock());
+	_epollManager->modFd(client->getSock(), _connEvent | std::get<1>(res));
 }
 
 

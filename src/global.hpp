@@ -23,11 +23,9 @@
 #define INVALID_SOCKET  (SOCKET)(~0)
 #define SOCKET_ERROR            (-1)
 
-#define SEND_BUF_SIZE 4096
-#define RECV_BUF_SIZE 2048
-
 #define READ_BUF_SIZE 4096
 #define WRITE_BUF_SIZE 4096
+
 #define CLIENT_HEART_DEAD_TIME 10000
 #define SERVER_SEND_TIME 200 
 

@@ -62,11 +62,10 @@ public:
 	REQUEST_TYPE process_request();
 	bool process_response(REQUEST_TYPE requestType);
 	std::tuple<bool, int> read();
-
-	bool write();
+	std::tuple<bool, int> write();
 
 private:
-	char _readBuf[RECV_BUF_SIZE];
+	char _readBuf[READ_BUF_SIZE];
 	char _writeBuf[WRITE_BUF_SIZE];
 	char _requestFileName[REQUEST_FILENAME_MAXLEN];
 
@@ -96,7 +95,7 @@ private:
 	int _responseSentLength;
 
 	bool _linger;
-	
+	void unmap();
 	REQUEST_TYPE parse_requestLine(char* lineText);
 	REQUEST_TYPE parse_headers(char* lineText);
 	REQUEST_TYPE parse_content(char* lineText);
@@ -110,7 +109,8 @@ private:
 
 	bool addHeaders(int contentLength)
 	{
-		return addResponse("Content-Length:%d\r\nConnection:%s\r\nContent-Encoding:utf-8\r\n\r\n", contentLength, (_linger == true) ? "keep-alive" : "close");
+		return addResponse("Content-Length:%d\r\nConnection:%s\r\n\r\n", contentLength, (_linger == true) ? "keep-alive" : "close");
+		//Content-Encoding:utf-8\r\n
 	}
 	bool addResponse(const char *format, ...);
 };

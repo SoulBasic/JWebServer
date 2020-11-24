@@ -24,7 +24,6 @@ REQUEST_TYPE CLIENT::process_request()
 		case CHECK_STATE_REQUESTLINE:
 		{
 			REQUEST_TYPE res = parse_requestLine(lineText);
-			LOG_DEBUG("res = %d", res);
 			if (res == BAD_REQUEST)return BAD_REQUEST;
 			break;
 		}
@@ -69,8 +68,10 @@ bool CLIENT::process_response(REQUEST_TYPE requestType)
 			_ivCount = 2;
 			//发送的全部数据为响应报文头部信息和文件大小
 			_responseLength = _lastWriteBufPos + _fileStat.st_size;
+			LOG_DEBUG("响应体应发长度 = %d + %d  = %d", _lastWriteBufPos, _fileStat.st_size, _responseLength);	
 			return true;
 		}
+		break;
 	}
 	case BAD_REQUEST:
 	{
@@ -135,7 +136,7 @@ std::tuple<bool, int> CLIENT::read()
 		}
 		else if (bytes_read == 0)
 		{
-			LOG_DEBUG("bytes read =0 客户退出");
+			LOG_DEBUG("客户退出");
 			return std::make_tuple(false, -1);
 		}
 		_lastReadBufPos += bytes_read;
@@ -143,52 +144,78 @@ std::tuple<bool, int> CLIENT::read()
 	return std::make_tuple(true, EAGAIN);
 }
 
-bool CLIENT::write()
+std::tuple<bool, int> CLIENT::write()
 {
-	if (_responseLength <= 0)
+	int sentLength = 0;
+	int newAdd = 0;
+	//若要发送的数据长度为0
+	//表示响应报文为空，一般不会出现这种情况
+	int sent = 0;
+	if (_responseLength == 0) return std::make_tuple(false, EAGAIN);
+	while (true)
 	{
-		return false;
-	}
-	while (_responseLength > 0)
-	{
-		int res = writev(_sock, _iovec, _ivCount);
-
-		if (res < 0)
+		//将响应报文的状态行、消息头、空行和响应正文发送给浏览器端
+		sentLength = writev(_sock, _iovec, _ivCount);
+		sent += sentLength;
+		//正常发送，sentLength为发送的字节数
+		if (sentLength > 0)
 		{
+			// 更新已发送字节
+			_responseSentLength += sentLength;
+			//偏移文件iovec的指针
+			newAdd = _responseSentLength - _lastWriteBufPos;
+		}
+		else if (sentLength <= -1)
+		{
+			//判断缓冲区是否满了
 			if (errno == EAGAIN)
 			{
-				return true;
+				if (_responseSentLength >= _iovec[0].iov_len)
+				{
+					//第一个iovec头部信息的数据已发送完，发送第二个iovec数据
+					_iovec[0].iov_len = 0;
+					_iovec[1].iov_base = _fileAddress + newAdd;
+					_iovec[1].iov_len = _responseLength;
+				}
+				//继续发送第一个iovec头部信息的数据
+				else
+				{
+					_iovec[0].iov_base = _writeBuf + _responseSentLength;
+					_iovec[0].iov_len -= _responseSentLength;
+				}
+				//需要重新注册写事件
+				LOG_DEBUG("一次未发送完的情况");
+				return std::make_tuple(true, EPOLLOUT);
 			}
-			if (_fileAddress)
-			{
-				munmap(_fileAddress, _fileStat.st_size);
-				_fileAddress = 0;
-			}
-			return false;
+			//如果发送失败，但不是缓冲区问题，取消映射
+			unmap();
+			LOG_DEBUG("发送失败，但不是缓冲区问题的情况");
+			return std::make_tuple(false, EPOLLERR);
 		}
-
-		_responseSentLength += res;
-		_responseLength -= res;
-		if (_responseSentLength >= _iovec[0].iov_len)
+		//更新已发送字节数
+		_responseLength -= sentLength;
+		//判断条件，数据已全部发送完
+		if (_responseLength <= 0)
 		{
-			_iovec[0].iov_len = 0;
-			_iovec[1].iov_base = _fileAddress + (_responseSentLength - _lastWriteBufPos);
-			_iovec[1].iov_len = _responseLength;
-		}
-		else
-		{
-			_iovec[0].iov_base = _writeBuf + _responseSentLength;
-			_iovec[0].iov_len -= _responseSentLength;
+			_lastWriteBufPos = 0;
+			unmap();
+			//需重置EPOLLONESHOT事件
+			LOG_DEBUG("发送完全");
+			LOG_DEBUG("实际write的长度%d", sent);
+			if (_linger)return std::make_tuple(true, EPOLLIN);
+			else return std::make_tuple(false, EPOLLERR);
 		}
 
 	}
-	if (_fileAddress)
+}
+
+void CLIENT::unmap()
+{
+	if (_fileAddress != nullptr)
 	{
 		munmap(_fileAddress, _fileStat.st_size);
-		_fileAddress = 0;
+		_fileAddress = nullptr;
 	}
-	if (_linger) return true;
-	else return false;
 }
 
 REQUEST_TYPE CLIENT::parse_requestLine(char* lineText)
@@ -244,14 +271,13 @@ REQUEST_TYPE CLIENT::parse_headers(char* lineText)
 		{
 			_linger = true;
 		}
-		LOG_DEBUG("Connection:");
 	}
 	else if (0 == strncasecmp(lineText, "Content-length:", 15))
 	{
 		lineText += 15;
 		lineText += strspn(lineText, " \t");
 		_contentLength = atoi(lineText);
-		LOG_DEBUG("Content-length:%d", _contentLength);
+		//LOG_DEBUG("Content-length:%d", _contentLength);
 	}
 	else if (0 == strncasecmp(lineText, "Host:", 5))
 	{
