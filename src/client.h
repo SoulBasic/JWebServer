@@ -45,6 +45,7 @@ public:
 		_ivCount(0),_responseLength(0),_responseSentLength(0)
 	{
 		memset(_readBuf, '\0', READ_BUF_SIZE);
+		signal(SIGPIPE, SIG_IGN);
 		_dtHeart = NOWTIME_MILLI;
 	}
 	~CLIENT();
@@ -96,6 +97,7 @@ private:
 
 	bool _linger;
 	void unmap();
+	void reset();
 	REQUEST_TYPE parse_requestLine(char* lineText);
 	REQUEST_TYPE parse_headers(char* lineText);
 	REQUEST_TYPE parse_content(char* lineText);

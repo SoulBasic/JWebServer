@@ -1,6 +1,6 @@
 ﻿#include "httpserver.h"
 
-HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent),_connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager())
+HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent),_connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager(1))
 {
 	_running = true;
 	_root = getcwd(nullptr, 256);
@@ -18,9 +18,12 @@ HttpServer::~HttpServer()
 	}
 }
 
+
+
 int HttpServer::initSocket(int port, std::string addr)
 {
 	_ssock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	signal(SIGPIPE, SIG_IGN);
 	if (INVALID_SOCKET == _ssock)
 	{
 		LOG_ERROR("生成服务器套接字失败");
@@ -147,7 +150,8 @@ void HttpServer::closeClient(SOCKET fd)
 	auto it = clients.find(fd);
 	if (fd >= 0 && it != clients.end())
 	{
-		LOG_INFO("客户%d退出",fd);
+		
+		LOG_INFO("客户%s退出", inet_ntoa(it->second->getSin().sin_addr));
 		_epollManager->deleteFd(fd);
 		clients.erase(fd);
 	}
