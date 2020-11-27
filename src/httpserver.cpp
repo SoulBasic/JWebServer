@@ -1,6 +1,6 @@
 ﻿#include "httpserver.h"
 
-HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent),_connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()),_threadManager(new ThreadManager(1))
+HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent), _connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()), _threadManager(new ThreadManager(1))
 {
 	_running = true;
 	_root = getcwd(nullptr, 256);
@@ -109,13 +109,19 @@ void HttpServer::onRun()
 			else LOG_ERROR("服务器未知错误，epoll event未定义");
 		}
 	}
+
 }
+
+
+
+
 
 int HttpServer::setNonblock(int fd)
 {
 	if (fd < 0)return SERVER_ERROR;
 	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
 }
+
 
 void HttpServer::acceptClient()
 {
@@ -139,7 +145,7 @@ void HttpServer::acceptClient()
 		{
 			LOG_INFO("新客户端连接:%s", inet_ntoa(csin.sin_addr));
 			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
-			_epollManager->addFd(csock, EPOLLIN | _connEvent );
+			_epollManager->addFd(csock, EPOLLIN | _connEvent);
 			setNonblock(csock);
 		}
 	}
@@ -150,7 +156,7 @@ void HttpServer::closeClient(SOCKET fd)
 	auto it = clients.find(fd);
 	if (fd >= 0 && it != clients.end())
 	{
-		
+
 		LOG_INFO("客户%s退出", inet_ntoa(it->second->getSin().sin_addr));
 		_epollManager->deleteFd(fd);
 		clients.erase(fd);

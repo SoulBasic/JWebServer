@@ -20,6 +20,8 @@ public:
 		return _log;
 	}
 
+	inline void setPrint(bool print) { _print = print; }
+
 	void info(const char* str) { info("%s", str); }
 	template<typename ...Args>
 	void info(const char* format, Args... args)
@@ -29,8 +31,11 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Info]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
-		printf("%s", "\n");
-		printf(format, args...);
+		if (_print)
+		{
+			printf("%s", "\n");
+			printf(format, args...);
+		}
 		fflush(_logFile);
 	}
 
@@ -43,8 +48,11 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Error]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
-		printf("%s", "\n");
-		printf(format, args...);
+		if (_print)
+		{
+			printf("%s", "\n");
+			printf(format, args...);
+		}
 		fflush(_logFile);
 	}
 
@@ -57,8 +65,11 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Warning]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
-		printf("%s", "\n");
-		printf(format, args...);
+		if (_print)
+		{
+			printf("%s", "\n");
+			printf(format, args...);
+		}
 		fflush(_logFile);
 	}
 
@@ -71,13 +82,17 @@ public:
 		std::tm* now = std::gmtime(&nowTime);
 		fprintf(_logFile, "\n[%d-%d-%d %d:%d:%d][Debug]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
 		fprintf(_logFile, format, args...);
-		printf("%s", "\n");
-		printf(format, args...);
+		if (_print)
+		{
+			printf("%s", "\n");
+			printf(format, args...);
+		}
 		fflush(_logFile);
 	}
 
 private:
 	FILE* _logFile;
+	bool _print;
 	JLog()
 	{
 		auto scn = std::chrono::system_clock().now();
@@ -86,6 +101,7 @@ private:
 		char fileName[36] = {};
 		snprintf(fileName, 36, "log %d-%d-%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday);
 		_logFile = fopen(fileName, "at");
+		_print = true;
 	}
 	~JLog ()
 	{
