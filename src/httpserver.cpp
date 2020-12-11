@@ -1,11 +1,16 @@
 ﻿#include "httpserver.h"
 
-HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) :_ssock(INVALID_SOCKET), _ssin({}), _listenEvent(listenEvent), _connEvent(connEvent), _epollTimeout(epollTimeoutMilli), _epollManager(new EpollManager()), _threadManager(new ThreadManager(1))
+HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) 
+	:_ssock(INVALID_SOCKET)
+	,_ssin({})
+	, _listenEvent(listenEvent)
+	, _connEvent(connEvent), _epollTimeout(epollTimeoutMilli)
+	, _epollManager(new EpollManager())
+	, _threadManager(new ThreadManager(1))
 {
 	_running = true;
 	_root = getcwd(nullptr, 256);
 	strncat(_root, "/html", 16);
-	//int count = DBManager::Instance().connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 10);
 }
 
 HttpServer::~HttpServer()

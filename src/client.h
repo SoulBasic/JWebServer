@@ -8,6 +8,9 @@
 #include <sys/mman.h>
 #include <stdarg.h>
 #include <sys/uio.h>
+#include "DBManager.hpp"
+#include "LoginCGI.hpp"
+#include "RegisterCGI.hpp"
 
 #define LINE_OK 0
 #define LINE_BAD 1 
@@ -39,10 +42,29 @@ class CLIENT
 {
 public:
 	CLIENT(SOCKET ssock, SOCKET csock, sockaddr_in csin, int userid, const char* root)
-		:_url(nullptr), _httpVersion(nullptr), _ssock(ssock), _sock(csock), _sin(csin), _lastReadBufPos(0), _checkedPos(0),
-		_checkState(CHECK_STATE_REQUESTLINE), _startLine(0), _method(METHOD_INVALID), _contentLength(0), _userID(userid),
-		 _linger(false), _host(nullptr), _root(root), _requestFileName({}),_fileAddress(nullptr),_lastWriteBufPos(0),
-		_ivCount(0),_responseLength(0),_responseSentLength(0)
+		: _url(nullptr)
+		, _httpVersion(nullptr)
+		, _ssock(ssock)
+		, _sock(csock)
+		, _sin(csin)
+		, _lastReadBufPos(0)
+		, _checkedPos(0)
+		, _checkState(CHECK_STATE_REQUESTLINE)
+		, _startLine(0)
+		, _method(METHOD_INVALID)
+		, _contentLength(0)
+		, _userID(userid)
+		, _linger(false)
+		, _host(nullptr)
+		, _root(root)
+		, _requestFileName({})
+		, _fileAddress(nullptr)
+		, _lastWriteBufPos(0)
+		, _ivCount(0)
+		, _responseLength(0)
+		, _responseSentLength(0)
+		, _content(nullptr)
+		, _cgi(false)
 	{
 		memset(_readBuf, '\0', READ_BUF_SIZE);
 		signal(SIGPIPE, SIG_IGN);
@@ -80,6 +102,7 @@ private:
 	char* _httpVersion;
 	char* _host;
 	char* _fileAddress;
+	char* _content;
 
 	SOCKET _ssock;
 	SOCKET _sock;
@@ -95,7 +118,9 @@ private:
 	int _responseLength;
 	int _responseSentLength;
 
+
 	bool _linger;
+	bool _cgi;
 	void unmap();
 	void reset();
 	REQUEST_TYPE parse_requestLine(char* lineText);
@@ -103,17 +128,17 @@ private:
 	REQUEST_TYPE parse_content(char* lineText);
 	REQUEST_TYPE doGet();
 	int parse_line();
-	inline char* get_line() { return _readBuf + _startLine; };
+	inline char* get_line() { return _readBuf + _startLine; }
 	bool addStatusLine(int statusCode, const char* title)
 	{
 		return addResponse("%s %d %s\r\n", "HTTP/1.1", statusCode, title);
 	}
-
 	bool addHeaders(int contentLength)
 	{
 		return addResponse("Content-Length:%d\r\nConnection:%s\r\n\r\n", contentLength, (_linger == true) ? "keep-alive" : "close");
 		//Content-Encoding:utf-8\r\n
 	}
 	bool addResponse(const char *format, ...);
+
 };
 #endif

@@ -8,10 +8,10 @@
 class DBManager
 {
 public:
-	static DBManager& Instance()
+	static DBManager* Instance()
 	{
 		static DBManager _dbManager;
-		return _dbManager;
+		return &_dbManager;
 	}
 	int connect(const char* host, int port, const char* userName, const char* passWord, const char* dbName, int connCount = 10)
 	{
@@ -43,10 +43,11 @@ public:
 			return nullptr;
 		}
 		sem_wait(&_semID);
-		
-		std::lock_guard<std::mutex> locker(_mtx);
-		sql = _connQueue.front();
-		_connQueue.pop();
+		{
+			std::lock_guard<std::mutex> locker(_mtx);
+			sql = _connQueue.front();
+			_connQueue.pop();
+		}
 		return sql;
 	}
 
@@ -86,5 +87,23 @@ private:
 };
 
 
+class auto_conn
+{
+public:
+	auto_conn()
+	{
+		_sql = DBManager::Instance()->getConn();
+	}
+	~auto_conn()
+	{
+		if (_sql != nullptr)
+		{
+			DBManager::Instance()->freeConn(_sql);
+		}
+	}
+	inline MYSQL* get() { return _sql; }
+private:
+	MYSQL* _sql;
+};
 
 #endif // !_DB_MANAGER_HPP_

@@ -18,6 +18,7 @@
 #include <mutex>
 #include <signal.h>
 #include <tuple>
+#include <map>
 #define SOCKET int
 
 #define INVALID_SOCKET  (SOCKET)(~0)

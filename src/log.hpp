@@ -5,19 +5,19 @@
 #include <ctime>
 #include <chrono>
 
-#define LOG_INFO JLog::Instance().info
-#define LOG_ERROR JLog::Instance().error
-#define LOG_WARNING JLog::Instance().warning
-#define LOG_DEBUG JLog::Instance().debug
+#define LOG_INFO JLog::Instance()->info
+#define LOG_ERROR JLog::Instance()->error
+#define LOG_WARNING JLog::Instance()->warning
+#define LOG_DEBUG JLog::Instance()->debug
 
 class JLog
 {
 public:
 	JLog& operator=(const JLog& other) = delete;
-	static JLog& Instance()
+	static JLog* Instance()
 	{
 		static JLog _log;
-		return _log;
+		return &_log;
 	}
 
 	inline void setPrint(bool print) { _print = print; }

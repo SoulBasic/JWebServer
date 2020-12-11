@@ -6,6 +6,8 @@
 #include "EpollManager.hpp"
 #include "client.h"
 #include "ThreadManager.hpp"
+#include "DBManager.hpp"
+
 #define SERVER_ERROR -1
 #define SERVER_SUCCESS 0
 

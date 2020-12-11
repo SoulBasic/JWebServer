@@ -12,9 +12,6 @@
     <ClInclude Include="src\httpserver.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="src\dbManager.hpp">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="src\EpollManager.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -31,6 +28,18 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="src\client.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\DBManager.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\CGI.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LoginCGI.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RegisterCGI.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

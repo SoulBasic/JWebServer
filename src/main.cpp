@@ -1,6 +1,6 @@
 ﻿#include "global.hpp"
 #include "httpserver.h"
-#include "dbManager.hpp"
+#include "DBManager.hpp"
 
 void cmdThread(HttpServer* s)
 {
@@ -17,12 +17,12 @@ void cmdThread(HttpServer* s)
 		else if ("print" == cmd)
 		{
 			std::cout << "已打开控制台日志" << std::endl;
-			JLog::Instance().setPrint(true);
+			JLog::Instance()->setPrint(true);
 		}
 		else if ("noprint" == cmd)
 		{
 			std::cout << "已关闭控制台日志" << std::endl;
-			JLog::Instance().setPrint(false);
+			JLog::Instance()->setPrint(false);
 		}
 		else std::cout << "无法解析的命令" << std::endl;
 	}
@@ -32,6 +32,7 @@ void cmdThread(HttpServer* s)
 
 int main(int argc, char* argv[])
 {
+	int count = DBManager::Instance()->connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 1);
 	HttpServer server(EPOLLET | EPOLLRDHUP, EPOLLET | EPOLLRDHUP | EPOLLONESHOT, 500);
 	if (SERVER_ERROR == server.initSocket(2324, ""))
 		return -1;

@@ -18,12 +18,14 @@ void CLIENT::reset()
 	_method = METHOD_GET;
 	_url = nullptr;
 	_httpVersion = nullptr;
+	_content = nullptr;
 	_contentLength = 0;
 	_host = nullptr;
 	_startLine = 0;
 	_checkedPos = 0;
 	_lastReadBufPos = 0;
 	_lastWriteBufPos = 0;
+	_cgi = false;
 	memset(_readBuf, '\0', READ_BUF_SIZE);
 	memset(_writeBuf, '\0', WRITE_BUF_SIZE);
 	memset(_requestFileName, '\0', REQUEST_FILENAME_MAXLEN);
@@ -261,7 +263,11 @@ REQUEST_TYPE CLIENT::parse_requestLine(char* lineText)
 	char* method = lineText;
 
 	if (strcasecmp(method, "GET") == 0) _method = METHOD_GET;
-	else if (strcasecmp(method, "POST") == 0) _method = METHOD_POST;
+	else if (strcasecmp(method, "POST") == 0)
+	{
+		_method = METHOD_POST;
+		_cgi = true;
+	}
 	else return BAD_REQUEST;
 	_url += strspn(_url, " \t");
 	_httpVersion = strpbrk(_url, " \t");
@@ -330,8 +336,14 @@ REQUEST_TYPE CLIENT::parse_headers(char* lineText)
 
 REQUEST_TYPE CLIENT::parse_content(char* lineText)
 {
-	LOG_ERROR("暂未支持POST CONTENT解析");
-	return GET_REQUEST;
+	if (_lastReadBufPos >= _contentLength + _checkedPos)
+	{
+		lineText[_contentLength] = '\0';
+		_content = lineText;
+		return GET_REQUEST;
+	}
+	return NO_REQUEST;
+
 }
 
 REQUEST_TYPE CLIENT::doGet()
@@ -339,8 +351,60 @@ REQUEST_TYPE CLIENT::doGet()
 	strcpy(_requestFileName, _root);
 	int len = strlen(_root);
 	const char* p = strrchr(_url, '/');
+	p++;
+	if (_cgi && strncasecmp(p, "login", 5) == 0)
+	{
+		LOG_INFO("用户POST方法请求login接口");
+		std::string content(_content);
+		LoginCGI cgi(content);
+		cgi.parse_form();
+		if (cgi.para_count() != 2)
+		{
+			LOG_INFO("参数不为2，错误");
+			return BAD_REQUEST;
+		}
+		bool stat = false;
+		std::string msg = "";
+		std::tie(stat,msg) = cgi.exec();
+		if (stat)
+		{
+			LOG_INFO("用户 %s 登录成功",cgi.userName().c_str());
+			strcpy(_url, "/welcome.html");
+		}
+		else
+		{
+			LOG_INFO("用户 %s 登录失败", cgi.userName().c_str());
+			strcpy(_url, "/error.html");
+		}
+	}
+	else if (_cgi && strncasecmp(p, "register", 8) == 0)
+	{
+		LOG_INFO("用户POST方法请求register接口");
+		std::string content(_content);
+		RegisterCGI cgi(content);
+		cgi.parse_form();
+		if (cgi.para_count() != 2)
+		{
+			LOG_INFO("参数不为2，错误");
+			return BAD_REQUEST;
+		}
+		bool stat = false;
+		std::string msg = "";
+		std::tie(stat, msg) = cgi.exec();
+		if (stat)
+		{
+			LOG_INFO("用户 %s 注册成功", cgi.userName().c_str());
+			strcpy(_url, "/welcome.html");
+		}
+		else
+		{
+			LOG_INFO("用户 %s 注册失败", cgi.userName().c_str());
+			strcpy(_url, "/error.html");
+		}
+	}
 
 	strncpy(_requestFileName + len, _url, REQUEST_FILENAME_MAXLEN - len - 1);
+
 	LOG_DEBUG("用户%s请求URL = %s",inet_ntoa(_sin.sin_addr), _requestFileName);
 	if (stat(_requestFileName, &_fileStat) < 0)return NO_RESOURCE;
 	if (!(_fileStat.st_mode & S_IROTH))return FORBIDDEN_REQUEST;
