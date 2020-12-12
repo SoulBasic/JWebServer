@@ -36,7 +36,7 @@ public:
 				std::cout << buf[i];
 				_buffer += buf[i];
 			}
-			res = recv(csock, buf, sizeof(buf), MSG_DONTROUTE);
+			res = recv(csock, buf, sizeof(buf), 0);
 		}
 		return true;
 	}
