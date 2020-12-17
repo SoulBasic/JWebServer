@@ -9,7 +9,7 @@ void cmdThread(HttpServer* s)
 	while (true)
 	{
 		std::cin >> cmd;
-		if ("quit" == cmd)
+		if ("quit" == cmd || "exit" == cmd)
 		{
 			s->setRunning(false);
 			break;
@@ -24,6 +24,16 @@ void cmdThread(HttpServer* s)
 			std::cout << "已关闭控制台日志" << std::endl;
 			JLog::Instance()->setPrint(false);
 		}
+		else if ("synlog" == cmd)
+		{
+			std::cout << "已开启同步日志模式" << std::endl;
+			JLog::Instance()->setSyn(true);
+		}
+		else if ("asynlog" == cmd)
+		{
+			std::cout << "已开启异步日志模式" << std::endl;
+			JLog::Instance()->setSyn(false);
+		}
 		else std::cout << "无法解析的命令" << std::endl;
 	}
 
@@ -32,7 +42,9 @@ void cmdThread(HttpServer* s)
 
 int main(int argc, char* argv[])
 {
-	int count = DBManager::Instance()->connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 1);
+	DBManager::Instance()->connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 1);
+	JLog::Instance()->setLevel(Level_Debug);
+	JLog::Instance()->setSyn(false);//异步日志
 	HttpServer server(EPOLLET | EPOLLRDHUP, EPOLLET | EPOLLRDHUP | EPOLLONESHOT, 500);
 	if (SERVER_ERROR == server.initSocket(2324, ""))
 		return -1;

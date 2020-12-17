@@ -95,6 +95,7 @@
     <LocalRemoteCopySources>false</LocalRemoteCopySources>
   </PropertyGroup>
   <ItemGroup>
+    <ClInclude Include="src\BlockQueue.hpp" />
     <ClInclude Include="src\CGI.hpp" />
     <ClInclude Include="src\client.h" />
     <ClInclude Include="src\DBManager.hpp" />

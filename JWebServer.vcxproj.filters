@@ -42,6 +42,9 @@
     <ClInclude Include="src\RegisterCGI.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\BlockQueue.hpp">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\httpserver.cpp">
