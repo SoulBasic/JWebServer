@@ -41,7 +41,7 @@ enum REQUEST_TYPE
 class CLIENT
 {
 public:
-	CLIENT(SOCKET ssock, SOCKET csock, sockaddr_in csin, int userid, const char* root)
+	CLIENT(SOCKET ssock, SOCKET csock, sockaddr_in csin, int userid)
 		: _url(nullptr)
 		, _httpVersion(nullptr)
 		, _ssock(ssock)
@@ -56,7 +56,6 @@ public:
 		, _userID(userid)
 		, _linger(false)
 		, _host(nullptr)
-		, _root(root)
 		, _fileAddress(nullptr)
 		, _lastWriteBufPos(0)
 		, _ivCount(0)
@@ -85,7 +84,7 @@ public:
 	bool process_response(REQUEST_TYPE requestType);
 	std::tuple<bool, int> read();
 	std::tuple<bool, int> write();
-
+	static char* _root;
 private:
 	char _readBuf[READ_BUF_SIZE];
 	char _writeBuf[WRITE_BUF_SIZE];
@@ -96,7 +95,7 @@ private:
 	struct sockaddr_in _sin;
 	time_t _dtHeart;
 
-	const char* _root;
+
 	char* _url;
 	char* _httpVersion;
 	char* _host;

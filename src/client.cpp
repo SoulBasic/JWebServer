@@ -1,5 +1,7 @@
 ﻿#include "client.h"
 
+char* CLIENT::_root = "";
+
 CLIENT::~CLIENT()
 {
 	if (INVALID_SOCKET != _sock)

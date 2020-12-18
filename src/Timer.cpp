@@ -22,9 +22,6 @@ WheelTimer::~WheelTimer()
 }
 void WheelTimer::addTimer(timer_struct* timer)
 {
-
-
-
 	auto itr = _place_map.find(timer->epfd);
 	int place = _now - 1;
 	if (place == -1)place = 59;

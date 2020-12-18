@@ -12,8 +12,7 @@ HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeou
 {
 	HttpServer::ptr_server = this;
 	_running = true;
-	_root = getcwd(nullptr, 256);
-	strncat(_root, "/html", 16);
+
 }
 
 HttpServer::~HttpServer()
@@ -167,50 +166,41 @@ void HttpServer::acceptClient()
 			_epollManager->addFd(csock, EPOLLIN | _connEvent);
 			setNonblock(csock);
 			_wheelTimer->addTimer(new timer_struct(csock, std::bind(&HttpServer::closeClient, this, csock)));
-			std::lock_guard<std::mutex> locker(_mtx);
-			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
+			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock));
 		}
 	}
 }
 
 void HttpServer::closeClient(SOCKET fd)
 {
-	std::unique_lock<std::mutex> locker(_mtx);
-	auto it = clients.find(fd);
-	if (fd < 0 || it == clients.end())return;
-	locker.unlock();
+	if (fd < 0 || clients[fd] == nullptr)return;
 	LOG_INFO("客户退出");
 	_epollManager->deleteFd(fd);
-	locker.lock();
-	clients.erase(fd);
+	clients[fd] = nullptr;
 }
 
 void HttpServer::onRead(SOCKET fd)
 {
-	std::unique_lock<std::mutex> locker(_mtx);
-	auto it = clients.find(fd);
-	if (it == clients.end())
+	auto c = clients[fd];
+	if (c == nullptr)
 	{
-		locker.unlock();
 		LOG_ERROR("来自无效客户端的请求");
 		return;
 	}
-	locker.unlock();
 	_wheelTimer->addTimer(new timer_struct(fd, std::bind(&HttpServer::closeClient, this, fd)));
-	_threadManager->addTask(std::bind(&HttpServer::handleRequest, this, it->second));
+	_threadManager->addTask(std::bind(&HttpServer::handleRequest, this, c));
 
 }
 
 void HttpServer::onWrite(SOCKET fd)
 {
-	std::unique_lock<std::mutex> locker(_mtx);
-	auto it = clients.find(fd);
-	if (it == clients.end())
+	auto c = clients[fd];
+	if (c == nullptr)
 	{
 		LOG_ERROR("找不到可写对象客户端");
 		return;
 	}
-	_threadManager->addTask(std::bind(&HttpServer::handleResponse, this, it->second));
+	_threadManager->addTask(std::bind(&HttpServer::handleResponse, this, c));
 
 }
 

@@ -18,10 +18,8 @@ class HttpServer
 private:
 	std::unordered_map<SOCKET, std::shared_ptr<CLIENT>> clients;
 	sockaddr_in _ssin;
-	char* _root;
 	std::unique_ptr<EpollManager> _epollManager;
 	std::unique_ptr<ThreadManager> _threadManager;
-	std::mutex _mtx;
 	uint32_t _listenEvent;
 	uint32_t _connEvent;
 	SOCKET _ssock;
@@ -34,6 +32,7 @@ private:
 	void handleRequest(std::shared_ptr<CLIENT> client);
 	void handleResponse(std::shared_ptr<CLIENT> client);
 	int setNonblock(int fd);
+
 public:
 	void closeClient(SOCKET fd);
 	HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli);
@@ -41,7 +40,7 @@ public:
 	int initSocket(int port, std::string addr);
 	void onRun();
 	inline void setRunning(bool running) { _running = running; }
-	
+	inline int client_count() { return clients.size(); }
 	std::unique_ptr<WheelTimer> _wheelTimer;
 	static HttpServer* ptr_server;
 	static void alarm_handler(int sig);

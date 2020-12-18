@@ -18,6 +18,7 @@ enum LogLevel
 	Level_Debug = 0,
 	Level_Release,
 	Level_ReleaseNoWarning,
+	Level_NoLog
 };
 
 class JLog
@@ -38,6 +39,7 @@ public:
 	template<typename ...Args>
 	void info(const char* format, Args... args)
 	{
+		if (_level >= Level_NoLog)return;
 		std::unique_lock<std::mutex> locker(_mtx);
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
@@ -67,6 +69,7 @@ public:
 	template<typename ...Args>
 	void error(const char* format, Args... args)
 	{
+		if (_level >= Level_NoLog)return;
 		std::unique_lock<std::mutex> locker(_mtx);
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
