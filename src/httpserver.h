@@ -21,12 +21,12 @@ private:
 	char* _root;
 	std::unique_ptr<EpollManager> _epollManager;
 	std::unique_ptr<ThreadManager> _threadManager;
-
+	std::mutex _mtx;
 	uint32_t _listenEvent;
 	uint32_t _connEvent;
 	SOCKET _ssock;
 	int _epollTimeout;
-	static const int maxClient = 65536;
+	static const int maxClient = 4096;
 	bool _running;
 	void acceptClient();
 	void onRead(SOCKET fd);

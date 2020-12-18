@@ -8,7 +8,7 @@ HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeou
 	, _connEvent(connEvent), _epollTimeout(epollTimeoutMilli)
 	, _wheelTimer(new WheelTimer(60))
 	, _epollManager(new EpollManager())
-	, _threadManager(new ThreadManager(1))
+	, _threadManager(new ThreadManager(20))
 {
 	HttpServer::ptr_server = this;
 	_running = true;
@@ -153,7 +153,7 @@ void HttpServer::acceptClient()
 		csock = accept(_ssock, reinterpret_cast<sockaddr*>(&csin), &len);
 		if (INVALID_SOCKET == csock)
 		{
-			LOG_ERROR("接收到无效socket");
+			//LOG_ERROR("接收到无效socket");
 			return;
 		}
 		else if (clients.size() >= maxClient)
@@ -163,35 +163,39 @@ void HttpServer::acceptClient()
 		}
 		else
 		{
-			LOG_INFO("新客户端连接:%s", inet_ntoa(csin.sin_addr));
-			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
+			LOG_INFO("新客户端连接");
 			_epollManager->addFd(csock, EPOLLIN | _connEvent);
 			setNonblock(csock);
 			_wheelTimer->addTimer(new timer_struct(csock, std::bind(&HttpServer::closeClient, this, csock)));
+			std::lock_guard<std::mutex> locker(_mtx);
+			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
 		}
 	}
 }
 
 void HttpServer::closeClient(SOCKET fd)
 {
+	std::unique_lock<std::mutex> locker(_mtx);
 	auto it = clients.find(fd);
-	if (fd >= 0 && it != clients.end())
-	{
-
-		LOG_INFO("客户%s退出", inet_ntoa(it->second->getSin().sin_addr));
-		_epollManager->deleteFd(fd);
-		clients.erase(fd);
-	}
+	if (fd < 0 || it == clients.end())return;
+	locker.unlock();
+	LOG_INFO("客户退出");
+	_epollManager->deleteFd(fd);
+	locker.lock();
+	clients.erase(fd);
 }
 
 void HttpServer::onRead(SOCKET fd)
 {
+	std::unique_lock<std::mutex> locker(_mtx);
 	auto it = clients.find(fd);
 	if (it == clients.end())
 	{
+		locker.unlock();
 		LOG_ERROR("来自无效客户端的请求");
 		return;
 	}
+	locker.unlock();
 	_wheelTimer->addTimer(new timer_struct(fd, std::bind(&HttpServer::closeClient, this, fd)));
 	_threadManager->addTask(std::bind(&HttpServer::handleRequest, this, it->second));
 
@@ -199,6 +203,7 @@ void HttpServer::onRead(SOCKET fd)
 
 void HttpServer::onWrite(SOCKET fd)
 {
+	std::unique_lock<std::mutex> locker(_mtx);
 	auto it = clients.find(fd);
 	if (it == clients.end())
 	{

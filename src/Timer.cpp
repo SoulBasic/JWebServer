@@ -35,10 +35,7 @@ void WheelTimer::addTimer(timer_struct* timer)
 		_place_map[timer->epfd] = place;
 		LOG_DEBUG("创建新定时器 fd=%d place=%d", timer->epfd, timer->place);
 	}
-	else if((*itr).second == place)
-	{
-		LOG_DEBUG("无需更新");
-	}
+	else if((*itr).second == place){}
 	else
 	{
 		auto& list = _wheel[(*itr).second];
@@ -51,7 +48,7 @@ void WheelTimer::addTimer(timer_struct* timer)
 					auto temp = *it;
 					it = list.erase(it);
 					delete temp;
-					LOG_DEBUG("用户%d更新定时器", timer->epfd);
+					//LOG_DEBUG("用户%d更新定时器", timer->epfd);
 					break;
 				}
 				else it++;
@@ -71,14 +68,6 @@ void WheelTimer::tick()
 {
 	_now++;
 	if (_now >= _wheel_size || _now < 0)_now = 0;
-
-	for (int i = 0; i < 60; i++)
-	{
-		if (_wheel[i].size() > 0)
-		{
-			LOG_DEBUG("place%d=%d", i, _wheel[i].size());
-		}
-	}
 	if(_wheel[_now].size() > 0)
 	{
 		LOG_DEBUG("tick=%d 中有%d个过期fd，进行清理",_now,_wheel[_now].size());

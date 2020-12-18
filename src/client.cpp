@@ -98,7 +98,7 @@ bool CLIENT::process_response(REQUEST_TYPE requestType)
 	case BAD_REQUEST:
 	{
 		const char* error400 = "Bad Request";
-		const char* error400_content = "您的请求有错误";
+		const char* error400_content = "400 Bad Request";
 		addStatusLine(400, error400);
 		addResponse("%s", "Content-Type: text/html;charset:utf-8;");
 		addHeaders(strlen(error400_content));
@@ -108,7 +108,7 @@ bool CLIENT::process_response(REQUEST_TYPE requestType)
 	case NO_RESOURCE:
 	{
 		const char* error404 = "Not Found";
-		const char* error404_content = "啊哦~没有你要找的内容哦";
+		const char* error404_content = "404 Not Found";
 		addStatusLine(404, error404);
 		addResponse("%s", "Content-Type: text/html;charset:utf-8;");
 		addHeaders(strlen(error404_content));
@@ -118,7 +118,7 @@ bool CLIENT::process_response(REQUEST_TYPE requestType)
 	case INTERNAL_ERROR:
 	{
 		const char* error500 = "Internal Error";
-		const char* error500_content = "服务器内部错误";
+		const char* error500_content = "500 Internal Error";
 		addStatusLine(500, error500);
 		addResponse("%s", "Content-Type: text/html;charset:utf-8;");
 		addHeaders(strlen(error500_content));
@@ -128,7 +128,7 @@ bool CLIENT::process_response(REQUEST_TYPE requestType)
 	case FORBIDDEN_REQUEST:
 	{
 		const char* error403 = "Forbidden";
-		const char* error403_content = "您没有权限访问这个页面";
+		const char* error403_content = "403 Forbidden";
 		addStatusLine(403, error403);
 		addResponse("%s", "Content-Type: text/html;charset:utf-8;");
 		addHeaders(strlen(error403_content));
