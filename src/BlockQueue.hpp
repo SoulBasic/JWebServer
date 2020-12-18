@@ -4,12 +4,13 @@
 
 #include "global.hpp"
 #include <condition_variable>
+#include <deque>
 
 template <class Item>
 class BlockQueue
 {
 public:
-	BlockQueue(size_t max_size):_running(false)
+	BlockQueue(size_t max_size):_running(true)
 	{
 		if (max_size <= 0)max_size = 1;
 		_max_size = max_size;
@@ -78,7 +79,7 @@ public:
 		std::unique_lock<std::mutex> locker(_mtx);
 		while (_deque.size() >= _max_size)
 		{
-			_producer.wait();
+			_producer.wait(locker);
 		}
 		_deque.push_front(item);
 		_consumer.notify_one();
@@ -110,7 +111,9 @@ public:
 		_producer.notify_one();
 		return true;
 	}
-
+	void flush() {
+		_consumer.notify_one();
+	};
 
 
 private:

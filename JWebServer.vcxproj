@@ -106,12 +106,14 @@
     <ClInclude Include="src\LoginCGI.hpp" />
     <ClInclude Include="src\RegisterCGI.hpp" />
     <ClInclude Include="src\ThreadManager.hpp" />
+    <ClInclude Include="src\Timer.h" />
     <ClInclude Include="src\TimeStamp.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\client.cpp" />
     <ClCompile Include="src\httpserver.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />

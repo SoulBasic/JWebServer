@@ -57,7 +57,6 @@ public:
 		, _linger(false)
 		, _host(nullptr)
 		, _root(root)
-		, _requestFileName({})
 		, _fileAddress(nullptr)
 		, _lastWriteBufPos(0)
 		, _ivCount(0)

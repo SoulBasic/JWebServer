@@ -1,13 +1,16 @@
 ﻿#include "httpserver.h"
 
+HttpServer* HttpServer::ptr_server = nullptr;
 HttpServer::HttpServer(uint32_t listenEvent, uint32_t connEvent, int epollTimeoutMilli) 
 	:_ssock(INVALID_SOCKET)
 	,_ssin({})
 	, _listenEvent(listenEvent)
 	, _connEvent(connEvent), _epollTimeout(epollTimeoutMilli)
+	, _wheelTimer(new WheelTimer(60))
 	, _epollManager(new EpollManager())
 	, _threadManager(new ThreadManager(1))
 {
+	HttpServer::ptr_server = this;
 	_running = true;
 	_root = getcwd(nullptr, 256);
 	strncat(_root, "/html", 16);
@@ -95,11 +98,24 @@ int HttpServer::initSocket(int port, std::string addr)
 	return SERVER_SUCCESS;
 }
 
+void HttpServer::alarm_handler(int sig)
+{
+	if (sig == SIGALRM)
+	{
+		if (HttpServer::ptr_server != nullptr)
+		{
+			HttpServer::ptr_server->_wheelTimer->tick();
+		}
+		alarm(1);
+	}
 
+}
 
 void HttpServer::onRun()
 {
 	LOG_INFO("服务器开始工作");
+	signal(SIGALRM, HttpServer::alarm_handler);
+	alarm(1);
 	while (_running)
 	{
 		int eventCount = _epollManager->wait(_epollTimeout);
@@ -116,7 +132,6 @@ void HttpServer::onRun()
 	}
 
 }
-
 
 
 
@@ -138,7 +153,7 @@ void HttpServer::acceptClient()
 		csock = accept(_ssock, reinterpret_cast<sockaddr*>(&csin), &len);
 		if (INVALID_SOCKET == csock)
 		{
-			//LOG_ERROR("接收到无效socket");
+			LOG_ERROR("接收到无效socket");
 			return;
 		}
 		else if (clients.size() >= maxClient)
@@ -152,6 +167,7 @@ void HttpServer::acceptClient()
 			clients[csock] = std::shared_ptr<CLIENT>(std::make_shared<CLIENT>(_ssock, csock, csin, csock, _root));
 			_epollManager->addFd(csock, EPOLLIN | _connEvent);
 			setNonblock(csock);
+			_wheelTimer->addTimer(new timer_struct(csock, std::bind(&HttpServer::closeClient, this, csock)));
 		}
 	}
 }
@@ -176,7 +192,9 @@ void HttpServer::onRead(SOCKET fd)
 		LOG_ERROR("来自无效客户端的请求");
 		return;
 	}
+	_wheelTimer->addTimer(new timer_struct(fd, std::bind(&HttpServer::closeClient, this, fd)));
 	_threadManager->addTask(std::bind(&HttpServer::handleRequest, this, it->second));
+
 }
 
 void HttpServer::onWrite(SOCKET fd)
@@ -188,6 +206,7 @@ void HttpServer::onWrite(SOCKET fd)
 		return;
 	}
 	_threadManager->addTask(std::bind(&HttpServer::handleResponse, this, it->second));
+
 }
 
 

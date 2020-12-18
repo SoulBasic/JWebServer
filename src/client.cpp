@@ -405,7 +405,7 @@ REQUEST_TYPE CLIENT::doGet()
 
 	strncpy(_requestFileName + len, _url, REQUEST_FILENAME_MAXLEN - len - 1);
 
-	LOG_DEBUG("用户%s请求URL = %s",inet_ntoa(_sin.sin_addr), _requestFileName);
+	//LOG_DEBUG("用户%s请求URL = %s",inet_ntoa(_sin.sin_addr), _requestFileName);
 	if (stat(_requestFileName, &_fileStat) < 0)return NO_RESOURCE;
 	if (!(_fileStat.st_mode & S_IROTH))return FORBIDDEN_REQUEST;
 	if (S_ISDIR(_fileStat.st_mode))return BAD_REQUEST;

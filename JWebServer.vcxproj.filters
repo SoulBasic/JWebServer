@@ -45,6 +45,9 @@
     <ClInclude Include="src\BlockQueue.hpp">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="src\Timer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\httpserver.cpp">
@@ -54,6 +57,9 @@
       <Filter>Sources</Filter>
     </ClCompile>
     <ClCompile Include="src\client.cpp">
+      <Filter>Sources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
       <Filter>Sources</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,7 +4,6 @@
 #include "log.hpp"
 #include "TimeStamp.hpp"
 
-
 #include <iostream>
 #include <vector>
 #include <sys/epoll.h>

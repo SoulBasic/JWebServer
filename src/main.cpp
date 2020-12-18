@@ -42,6 +42,7 @@ void cmdThread(HttpServer* s)
 
 int main(int argc, char* argv[])
 {
+
 	DBManager::Instance()->connect("soulbasic.cxewdbabus4o.ap-northeast-1.rds.amazonaws.com", 3306, "tws", "123456", "tws", 1);
 	JLog::Instance()->setLevel(Level_Debug);
 	JLog::Instance()->setSyn(false);//异步日志

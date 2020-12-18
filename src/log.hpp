@@ -12,6 +12,7 @@
 #define LOG_WARNING JLog::Instance()->warning
 #define LOG_DEBUG JLog::Instance()->debug
 
+
 enum LogLevel
 {
 	Level_Debug = 0,
@@ -37,13 +38,14 @@ public:
 	template<typename ...Args>
 	void info(const char* format, Args... args)
 	{
+		std::unique_lock<std::mutex> locker(_mtx);
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
 		std::tm* now = std::gmtime(&nowTime);
 		if (!_syn)
 		{
 			int c1 = snprintf(_buf, 40960, "\n[%d-%d-%d %d:%d:%d][Info]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-			int c2 = snprintf(_buf + c1, 40000, args...);
+			int c2 = snprintf(_buf + c1, 40000, format, args...);
 			_buf[c1 + c2] = '\0';
 			_bqueue.push_back(std::string(_buf));
 		}
@@ -56,21 +58,23 @@ public:
 				printf("%s", "\n");
 				printf(format, args...);
 			}
-			fflush(_logFile);
 		}
+
+		flush();
 	}
 
 	void error(const char* str) { error("%s", str); }
 	template<typename ...Args>
 	void error(const char* format, Args... args)
 	{
+		std::unique_lock<std::mutex> locker(_mtx);
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
 		std::tm* now = std::gmtime(&nowTime);
 		if (!_syn)
 		{
 			int c1 = snprintf(_buf, 40960, "\n[%d-%d-%d %d:%d:%d][Error]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-			int c2 = snprintf(_buf + c1, 40000, args...);
+			int c2 = snprintf(_buf + c1, 40000, format, args...);
 			_buf[c1 + c2] = '\0';
 			_bqueue.push_back(std::string(_buf));
 		}
@@ -83,8 +87,9 @@ public:
 				printf("%s", "\n");
 				printf(format, args...);
 			}
-			fflush(_logFile);
 		}
+
+		flush();
 	}
 
 	void warning(const char* str) { warning("%s", str); }
@@ -92,6 +97,7 @@ public:
 	void warning(const char* format, Args... args)
 	{
 		if (_level >= Level_ReleaseNoWarning)return;
+		std::unique_lock<std::mutex> locker(_mtx);
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
 		std::tm* now = std::gmtime(&nowTime);
@@ -99,7 +105,7 @@ public:
 		if (!_syn)
 		{
 			int c1 = snprintf(_buf, 40960, "\n[%d-%d-%d %d:%d:%d][Warning]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-			int c2 = snprintf(_buf + c1, 40000, args...);
+			int c2 = snprintf(_buf + c1, 40000, format, args...);
 			_buf[c1 + c2] = '\0';
 			_bqueue.push_back(std::string(_buf));
 		}
@@ -112,8 +118,9 @@ public:
 				printf("%s", "\n");
 				printf(format, args...);
 			}
-			fflush(_logFile);
 		}
+
+		flush();
 	}
 
 	void debug(const char* str) { debug("%s", str); }
@@ -121,6 +128,7 @@ public:
 	void debug(const char* format, Args... args)
 	{
 		if (_level > Level_Debug)return;
+		std::unique_lock<std::mutex> locker(_mtx);
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
 		std::tm* now = std::gmtime(&nowTime);
@@ -128,7 +136,7 @@ public:
 		if (!_syn)
 		{
 			int c1 = snprintf(_buf, 40960, "\n[%d-%d-%d %d:%d:%d][Debug]", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday, now->tm_hour, now->tm_min, now->tm_sec);
-			int c2 = snprintf(_buf + c1, 40000, args...);
+			int c2 = snprintf(_buf + c1, 40000, format, args...);
 			_buf[c1 + c2] = '\0';
 			_bqueue.push_back(std::string(_buf));
 		}
@@ -141,9 +149,9 @@ public:
 				printf("%s", "\n");
 				printf(format, args...);
 			}
-			fflush(_logFile);
 		}
 
+		flush();
 	}
 
 private:
@@ -158,28 +166,45 @@ private:
 
 
 
-	JLog() :_print(true), _syn(true), _bqueue(1024),_asynThread(std::thread(asynThread))
+	JLog() :_print(true), _syn(true), _bqueue(1024),_asynThread(std::thread(JLog::asynThread))
 	{
 		auto scn = std::chrono::system_clock().now();
 		time_t nowTime = std::chrono::system_clock::to_time_t(scn);
 		std::tm* now = std::gmtime(&nowTime);
 		char fileName[36] = {};
-		snprintf(fileName, 36, "log %d-%d-%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday);
+		snprintf(fileName, 36, "log%d-%d-%d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday);
 		_logFile = fopen(fileName, "at");
+		_asynThread.detach();
 	}
 	~JLog()
 	{
+		std::lock_guard<std::mutex> locker(_mtx);
+		flush();
 		fclose(_logFile);
 	}
 
-	void asynThread(){JLog::Instance()->asynWrite();}
+	void flush() {
+		if (!_syn) {
+			_bqueue.flush();
+		}
+		fflush(_logFile);
+	}
+
+
+	static void asynThread(){JLog::Instance()->asynWrite();}
 
 	void asynWrite() {
 		std::string str = "";
 		while (_bqueue.take(str)) {
 			std::lock_guard<std::mutex> locker(_mtx);
 			fprintf(_logFile, "%s", str.c_str());
+			if (_print)
+			{
+				printf("%s", str.c_str());
+			}
+
 		}
+		printf("%s", "[Error]异步日志未知原因已终止!");
 	}
 };
 
